@@ -29,9 +29,13 @@ fretboard.pack(pady=20)
 # -------------------------
 button_frame = ttk.Frame(root)
 button_frame.pack(pady=20)
-ttk.Button(button_frame, text="Notes").grid(row=0, column=0, padx=10)
-ttk.Button(button_frame, text="Intervals").grid(row=0, column=1, padx=10)
-ttk.Button(button_frame, text="New question").grid(row=0, column=2, padx=10)
+# ttk.Button(button_frame, text="Notes").grid(row=0, column=0, padx=10)
+# ttk.Button(button_frame, text="Intervals").grid(row=0, column=1, padx=10)
+# ttk.Button(button_frame, text="New question").grid(row=0, column=2, padx=10)
+
+kezdo_label = ttk.Label(button_frame,text="A hang:",font=("Arial", 30))
+kezdo_label.grid(row=0, column=0,pady=20)
+
 #--------------------------
 
 
@@ -44,7 +48,8 @@ def fretboard_click(event):
     print("x:", event.x)
     print("y:", event.y)
     string,fret =which_string_and_fret(event.x,event.y)
-    which_note(string,fret)
+    note =which_note(string,fret)
+    kezdo_label.config(text=f"A hang {note}")
 
 fretboard.bind("<Button-1>", fretboard_click)
 #-------------------------
@@ -69,16 +74,20 @@ def which_string_and_fret(x,y):
 
     #STRING
     string_done = False # kicsit sajátos számozással csináltam meg a húrokat lol
-    if y > 280 | y<20:
+    if y > 280 or y<0:
         clicked_string = False
         string_done = True
-    for string,position in string_position.items():
+    string_border = {0:62,1:106,2:150,3:194,4:238,5:280} #sokkal könyebb hardcode-olva
+    for string,border in string_border.items():
         if string_done == False:
-            if y < position:
+            if y < border:
                 clicked_string = string
                 string_done = True
-    print(f"{clicked_string}. húron  {clicked_fret} fret")
-    return clicked_string,clicked_string
+        #PIROSSAL KIJELZÉS
+        if string <5: #gitár szélére már ne rajzoljon
+            fretboard.create_line(100, border, 1300, border,width=2,fill="red")
+    print(string_border)
+    return clicked_string,clicked_fret
 
 def which_note(string,fret):
     notes = {
@@ -94,7 +103,14 @@ def which_note(string,fret):
     9: "C# - Db",
     10: "D",
     11: "D# - Eb"}
-
+    string_names = {
+    0: "e",
+    1: "B",
+    2: "G",
+    3: "D",
+    4: "A",
+    5: "E"
+    }
     #húrokkénti hangok eltolása:
     if string == 5:
         note_offset = 0
@@ -108,12 +124,13 @@ def which_note(string,fret):
         note_offset = 19
     elif string == 0:
         note_offset =24
-    print(f"A fret: {fret}, {note_offset}")
+    
     #AZ E húron ez hanyadik fret lenne?
     fret_value = fret+note_offset
-    print(f"A fret value: {fret_value}")
+    
     note = notes[fret_value%12]
     print(f"A hang: {note}")
+    return note
 
 
 
