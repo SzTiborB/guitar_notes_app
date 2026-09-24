@@ -158,3 +158,31 @@ def guitar_init(WIDTH,HEIGHT,fretboard):
     #     font=("Arial", 20, "bold")
     # )
     return fret_position,string_position
+
+class GuitarString:
+    notes = {
+    0: "E",
+    1: "F",
+    2: "F#-Gb",
+    3: "G",
+    4: "G#-Ab",
+    5: "A",
+    6: "A#-Bb",
+    7: "B",
+    8: "C",
+    9: "C#-Db",
+    10: "D",
+    11: "D#-Eb"}
+    def __init__(self, name, y, open_note):
+        self.name = name
+        self.y = y
+        self.open_note = open_note
+        self.border_y = None
+
+    def set_border_y(self,y):
+        self.border_y=y
+    
+    def note(self,fret):
+        note_index = fret+self.open_note
+        return self.notes[note_index]
+

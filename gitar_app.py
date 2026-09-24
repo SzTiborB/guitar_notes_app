@@ -11,12 +11,8 @@ root.geometry("1400x600")
 #AZ ALAP FRETBOARD
 WIDTH = 1300
 HEIGHT = 300
-fretboard = tk.Canvas(
-    root,
-    width=WIDTH,
-    height=HEIGHT,
-    bg="white"
-)
+fretboard = tk.Canvas(root,width=WIDTH,height=HEIGHT,bg="white")
+
 #FELRAJZOLJA A GITÁRT, FRET ÉS STRING POZÍCIÓKAT ELTÁROLJUK -> kattintások-hangokhoz rendelése
 fret_position,string_position=mt.guitar_init(WIDTH,HEIGHT,fretboard)
 fretboard.pack(pady=20)
@@ -53,6 +49,31 @@ def fretboard_click(event):
 
 fretboard.bind("<Button-1>", fretboard_click)
 #-------------------------
+# GITÁR HÚROK LÉTREHOZÁSA CLASS-szal
+string_list = []
+string_e = mt.GuitarString("e",string_position[0],24)
+string_B = mt.GuitarString("B",string_position[1],19)
+string_G = mt.GuitarString("G",string_position[2],15)
+string_D = mt.GuitarString("D",string_position[3],10)
+string_A = mt.GuitarString("D",string_position[4],5)
+string_E = mt.GuitarString("E",string_position[5],0)
+string_list.append(string_e)
+string_list.append(string_B)
+string_list.append(string_G)
+string_list.append(string_D)
+string_list.append(string_A)
+string_list.append(string_E)
+
+# A GITÁR HANGOK KATTINTÁS-ÉRZÉKELÉSÉNEK PIROS HATÁRAI
+top_fretboard_border = string_list[0].y-20
+bottom_fretboard_border = string_list[-1].y+20
+for i in range(len(string_list)-1):
+    border_y=(string_list[i].y+string_list[i+1].y)/2
+    string_list[i].set_border_y(border_y)
+    #fretboard.create_line(100, border_y, 1300, border_y,width=2,fill="red")
+
+
+
 
 def which_string_and_fret(x,y):
 
@@ -86,7 +107,7 @@ def which_string_and_fret(x,y):
         #PIROSSAL KIJELZÉS
         if string <5: #gitár szélére már ne rajzoljon
             fretboard.create_line(100, border, 1300, border,width=2,fill="red")
-    print(string_border)
+    #print(string_border)
     return clicked_string,clicked_fret
 
 def which_note(string,fret):
@@ -134,7 +155,10 @@ def which_note(string,fret):
 
 
 
-for fret,position in fret_position.items():
-    print(fret,position)
+
+for string in string_list:
+    string : mt.GuitarString
+    print(f"{string.name} húr poz: {string.y}")
+
 
 root.mainloop()
