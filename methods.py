@@ -78,15 +78,15 @@ def guitar_init(WIDTH,HEIGHT,fretboard):
         top_y = (middle_y+top_fretboard_end)/2
         bottom_y=(middle_y+bottom_fretboard_end)/2
         fretboard.create_oval(
-            x-r, top_y-r,
-            x+r, top_y+r,
+            x-r, top_y-r-5,
+            x+r, top_y+r-5,
             fill="black",
             outline="black",
             width=2
         )
         fretboard.create_oval(
-            x-r, bottom_y-r,
-            x+r, bottom_y+r,
+            x-r, bottom_y-r+5,
+            x+r, bottom_y+r+5,
             fill="black",
             outline="black",
             width=2
@@ -173,6 +173,32 @@ class GuitarString:
     9: "C#-Db",
     10: "D",
     11: "D#-Eb"}
+    notes_sharp = {
+    0: "E",
+    1: "F",
+    2: "F#",
+    3: "G",
+    4: "G#",
+    5: "A",
+    6: "A#",
+    7: "B",
+    8: "C",
+    9: "C#",
+    10: "D",
+    11: "D#"}
+    notes_flat = {
+    0: "E",
+    1: "F",
+    2: "Gb",
+    3: "G",
+    4: "Ab",
+    5: "A",
+    6: "Bb",
+    7: "B",
+    8: "C",
+    9: "Db",
+    10: "D",
+    11: "Eb"}
     def __init__(self, name, y, open_note):
         self.name = name
         self.y = y
@@ -182,7 +208,13 @@ class GuitarString:
     def set_border_y(self,y):
         self.border_y=y
     
-    def note(self,fret):
-        note_index = fret+self.open_note
-        return self.notes[note_index]
+    def note(self,fret,notation="both"):
+        note_index = (fret+self.open_note) %12
+        if notation == "sharp":
+            return self.notes_sharp[note_index]
+
+        elif notation == "flat":
+            return self.notes_flat[note_index]
+        else:
+            return self.notes[note_index]
 

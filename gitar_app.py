@@ -20,6 +20,25 @@ fretboard.pack(pady=20)
 
 
 
+
+
+#-------------------------------
+# GOMB FÜGGVÉNYEK
+#-----------------------------
+def switch1_changed():
+    if switch1_var.get():
+        print("ON")
+        # pl. összes hang megjelenítése
+    else:
+        print("OFF")
+        # pl. hangok eltüntetése
+
+#------------------------
+
+
+
+
+
 # -------------------------
 # Gombok területe
 # -------------------------
@@ -32,6 +51,10 @@ button_frame.pack(pady=20)
 kezdo_label = ttk.Label(button_frame,text="A hang:",font=("Arial", 30))
 kezdo_label.grid(row=0, column=0,pady=20)
 
+switch1_var = tk.BooleanVar(value=False)
+switch1 = ttk.Checkbutton(button_frame,text="Show notes on freatboard",
+                         variable=switch1_var,command=switch1_changed)
+switch1.grid(row=1,column=0,pady=20)
 #--------------------------
 
 
@@ -41,15 +64,19 @@ kezdo_label.grid(row=0, column=0,pady=20)
 # KATTINTÁS ÉRZÉKELÉS
 #--------------------------
 def fretboard_click(event):
-    print("x:", event.x)
-    print("y:", event.y)
-    string,fret =which_string_and_fret(event.x,event.y)
-    note =which_note(string,fret)
+    #print("x:", event.x)
+    #print("y:", event.y)
+    note=clicked_note(event.x,event.y)
+    
     kezdo_label.config(text=f"A hang {note}")
-
+    write_notes_on_fretboard()
 fretboard.bind("<Button-1>", fretboard_click)
 #-------------------------
+
+
+#----------------------------------
 # GITÁR HÚROK LÉTREHOZÁSA CLASS-szal
+#region
 string_list = []
 string_e = mt.GuitarString("e",string_position[0],24)
 string_B = mt.GuitarString("B",string_position[1],19)
@@ -70,12 +97,18 @@ bottom_fretboard_border = string_list[-1].y+20
 for i in range(len(string_list)-1):
     border_y=(string_list[i].y+string_list[i+1].y)/2
     string_list[i].set_border_y(border_y)
-    #fretboard.create_line(100, border_y, 1300, border_y,width=2,fill="red")
+    fretboard.create_line(100, border_y, 1300, border_y,width=2,fill="red")
+string_list[5].set_border_y(bottom_fretboard_border)
+#endregion
+#----------------------------------------------------
 
 
+#-----------------------------------
+# FÜGGVÉNYEK
+#----------------------------------
 
 
-def which_string_and_fret(x,y):
+def clicked_note(x,y):
 
     #FRET ------------
     fret_done = False
@@ -94,71 +127,55 @@ def which_string_and_fret(x,y):
     #--------------------------
 
     #STRING
-    string_done = False # kicsit sajátos számozással csináltam meg a húrokat lol
-    if y > 280 or y<0:
-        clicked_string = False
+    string_done = False
+    if y < top_fretboard_border:
+        clicked_string = None
         string_done = True
-    string_border = {0:62,1:106,2:150,3:194,4:238,5:280} #sokkal könyebb hardcode-olva
-    for string,border in string_border.items():
-        if string_done == False:
-            if y < border:
-                clicked_string = string
-                string_done = True
-        #PIROSSAL KIJELZÉS
-        if string <5: #gitár szélére már ne rajzoljon
-            fretboard.create_line(100, border, 1300, border,width=2,fill="red")
-    #print(string_border)
-    return clicked_string,clicked_fret
+    elif y > bottom_fretboard_border:
+        clicked_string = None
+        string_done = True
+    if string_done == False:
+        for i in range(len(string_list)):
+            if y < string_list[i].border_y:
+                clicked_string = i
+                break
+    #--------------------
 
-def which_note(string,fret):
-    notes = {
-    0: "E",
-    1: "F",
-    2: "F# - Gb",
-    3: "G",
-    4: "G# - Ab",
-    5: "A",
-    6: "A# - Bb",
-    7: "B",
-    8: "C",
-    9: "C# - Db",
-    10: "D",
-    11: "D# - Eb"}
-    string_names = {
-    0: "e",
-    1: "B",
-    2: "G",
-    3: "D",
-    4: "A",
-    5: "E"
-    }
-    #húrokkénti hangok eltolása:
-    if string == 5:
-        note_offset = 0
-    elif string == 4:
-        note_offset = 5
-    elif string == 3:
-        note_offset =10
-    elif string == 2:
-        note_offset = 15
-    elif string == 1:
-        note_offset = 19
-    elif string == 0:
-        note_offset =24
-    
-    #AZ E húron ez hanyadik fret lenne?
-    fret_value = fret+note_offset
-    
-    note = notes[fret_value%12]
-    print(f"A hang: {note}")
+    #NOTE_
+    note = string_list[clicked_string].note(clicked_fret)
     return note
 
+def write_notes_on_fretboard():
+    for string in string_list:
+        string : mt.GuitarString
+        for j in range(24):
+            i=j+1
+            note = string.note(i,notation="sharp")
+            y=string.y
+            if i == 1:
+                elozo_fret = 100
+                kovetkezo_fret = fret_position[1]
+                x=(kovetkezo_fret+elozo_fret)/2
+            else:
+                elozo_fret = fret_position[i-1]
+                kovetkezo_fret=fret_position[i]
+                x=(elozo_fret+kovetkezo_fret)/2
+            r=10
+            fretboard.create_oval(
+            x-r, y-r,
+            x+r, y+r,
+            fill="white",
+            outline="black",
+            width=2
+        )
+            fretboard.create_text(x, y,
+                        text=note,
+                        fill="black",
+                        anchor="center", #a betű tetejének a közepe illesztődik
+                        font=("Arial", 10, "bold")
+                    )
+#--------------------------------
 
 
-
-for string in string_list:
-    string : mt.GuitarString
-    print(f"{string.name} húr poz: {string.y}")
-
-
+            
 root.mainloop()
