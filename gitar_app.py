@@ -28,11 +28,20 @@ fretboard.pack(pady=20)
 def switch1_changed():
     if switch1_var.get():
         print("ON")
+        write_notes_on_fretboard()
         # pl. összes hang megjelenítése
     else:
-        print("OFF")
+        print("Off")
+        fretboard.delete("note_in_circle")
         # pl. hangok eltüntetése
 
+def fretboard_click(event):
+    #print("x:", event.x)
+    #print("y:", event.y)
+    note=clicked_note(event.x,event.y)
+    
+    kezdo_label.config(text=f"A hang {note}")
+fretboard.bind("<Button-1>", fretboard_click)
 #------------------------
 
 
@@ -60,18 +69,7 @@ switch1.grid(row=1,column=0,pady=20)
 
 
 
-#--------------------------
-# KATTINTÁS ÉRZÉKELÉS
-#--------------------------
-def fretboard_click(event):
-    #print("x:", event.x)
-    #print("y:", event.y)
-    note=clicked_note(event.x,event.y)
-    
-    kezdo_label.config(text=f"A hang {note}")
-    write_notes_on_fretboard()
-fretboard.bind("<Button-1>", fretboard_click)
-#-------------------------
+
 
 
 #----------------------------------
@@ -166,13 +164,15 @@ def write_notes_on_fretboard():
             x+r, y+r,
             fill="white",
             outline="black",
-            width=2
+            width=2,
+            tags="note_in_circle"
         )
             fretboard.create_text(x, y,
                         text=note,
                         fill="black",
                         anchor="center", #a betű tetejének a közepe illesztődik
-                        font=("Arial", 10, "bold")
+                        font=("Arial", 10, "bold"),
+                        tags= "note_in_circle"
                     )
 #--------------------------------
 
