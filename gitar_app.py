@@ -59,69 +59,7 @@ fretboard.bind("<Button-1>", fretboard_click)
 
 #-------------------------------------------------------------------------------------------------
 def start_note_game():
-
-    # GITÁROS ABLAK KREÁLÁSA
-    note_game_window = tk.Toplevel(root)
-    note_game_window.title("Find the Note")
-    note_game_window.geometry("1400x600")
-    note_game_fretboard = tk.Canvas(note_game_window,width=WIDTH,height=HEIGHT,bg="white")
-    note_game_fretboard.pack(pady=20)
-    fret_position,string_position=mt.guitar_init(WIDTH,HEIGHT,note_game_fretboard)
-
-    # JÁTÉK -----------------------
-
-    #random note generalas
-    note_count_list = {
-    "E": 14,
-    "F": 12,
-    "F#-Gb": 12,
-    "G": 13,
-    "G#-Ab": 12,
-    "A": 13,
-    "A#-Bb": 12,
-    "B": 13,
-    "C": 12,
-    "C#-Bb": 12,
-    "D": 13,
-    "D#-Eb": 12}
-    
-    random_note_szam = random.randint(0,11)
-    random_note = NOTES[random_note_szam]
-    print(random_note)
-    #kattintas -> note rajzolás
-    def ntgame_fretboard_click(event):
-        note,clicked_string,clicked_fret=clicked_note(event.x,event.y,detailed_return=True)
-        
-        #ntgame_label.config(text=f"A hang {note}")
-        print(f"random_note: {random_note} - clicked_note: {note}")
-
-        y=string_position[clicked_string]
-        r=12
-        if clicked_fret == 0:
-            x=80
-        elif clicked_fret == 1:
-            x=(fret_position[1]+100)/2
-        else:
-            x=(fret_position[clicked_fret]+fret_position[clicked_fret-1])/2
-
-        if note == random_note: #HA JÓ A LENYOMOTT FRET
-            note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="green",outline="black",width=2,tags="guessed_note")
-        else: #HA ROSSZ
-           note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="red",outline="black",width=2,tags="guessed_note")
-        #NOTE_ BELEÍRÁSA
-        note_text = string_list[clicked_string].note(clicked_fret,notation="sharp")
-        note_game_fretboard.create_text(x, y,text=note_text,fill="white",anchor="center", font=("Arial", 12))
-
-    note_game_fretboard.bind("<Button-1>", ntgame_fretboard_click)
-    # GOMBOK
-    ntgame_button_frame = ttk.Frame(note_game_window)
-    ntgame_button_frame.pack(pady=20)
-    ntgame_label = ttk.Label(ntgame_button_frame,text=f"A hang:{random_note}",font=("Arial", 30))
-    ntgame_label.grid(row=0, column=0,pady=20)
-    ntgame_how_many_notes_label =ttk.Label(ntgame_button_frame,
-        text=f"Notes found:{0}/{note_count_list[random_note]}",font=("Arial", 20))
-    ntgame_how_many_notes_label.grid(row=1,column=0,pady=20)
-    #-------------------------------
+    note_game = mt.ClickTheNoteGame(root=root,string_list=string_list)
 #---------------------------------------------------------------------------------------------------------
 
 

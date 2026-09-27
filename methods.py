@@ -1,3 +1,7 @@
+import random
+import tkinter as tk
+from tkinter import ttk
+
 def guitar_init(WIDTH,HEIGHT,fretboard):
     guitar_neck_top_y = 20
     guitar_neck_bottom_y = HEIGHT-guitar_neck_top_y
@@ -159,6 +163,57 @@ def guitar_init(WIDTH,HEIGHT,fretboard):
     # )
     return fret_position,string_position
 
+
+
+    #NOTE_
+    note = string_list[clicked_string].note(clicked_fret)
+    if detailed_return == False:
+        return note
+    elif detailed_return == True:
+        return note,clicked_string,clicked_fret
+
+def clicked_note(x,y,fret_position,string_list,detailed_return=False):
+    top_fretboard_border = string_list[0].y-20
+    bottom_fretboard_border = string_list[-1].y+20
+    #FRET ------------
+    fret_done = False
+    if x < 100:
+        clicked_fret = 0
+        fret_done=True
+    elif x >1280:
+        clicked_fret = False
+        fret_done=True
+    for fret,position in fret_position.items():
+        if fret_done == False:
+            if x < position:
+                clicked_fret=fret
+                fret_done = True
+    #print(f"Kattintott: {clicked_fret}")
+    #--------------------------
+
+    #STRING
+    string_done = False
+    if y < top_fretboard_border:
+        clicked_string = None
+        string_done = True
+    elif y > bottom_fretboard_border:
+        clicked_string = None
+        string_done = True
+    if string_done == False:
+        for i in range(len(string_list)):
+            if y < string_list[i].border_y:
+                clicked_string = i
+                break
+    #--------------------
+
+    #NOTE_
+    note = string_list[clicked_string].note(clicked_fret)
+    if detailed_return == False:
+        return note
+    elif detailed_return == True:
+        return note,clicked_string,clicked_fret
+
+    
 class GuitarString:
     notes = {
     0: "E",
@@ -218,3 +273,93 @@ class GuitarString:
         else:
             return self.notes[note_index]
 
+
+class ClickTheNoteGame:
+    WIDTH = 1300
+    HEIGHT = 300
+    NOTES= {
+    0: "E",
+    1: "F",
+    2: "F#-Gb",
+    3: "G",
+    4: "G#-Ab",
+    5: "A",
+    6: "A#-Bb",
+    7: "B",
+    8: "C",
+    9: "C#-Db",
+    10: "D",
+    11: "D#-Eb"}
+    NOTE_COUNT_LIST = {
+    "E": 14,
+    "F": 12,
+    "F#-Gb": 12,
+    "G": 13,
+    "G#-Ab": 12,
+    "A": 13,
+    "A#-Bb": 12,
+    "B": 13,
+    "C": 12,
+    "C#-Bb": 12,
+    "D": 13,
+    "D#-Eb": 12}
+
+    def __init__(self,root,string_list):
+        self.random_note = self.NOTES[random.randint(0,11)]
+        self.string_list = string_list
+        #AZ ABLAK VÁLTOZÓI?
+        self.fret_positions=None
+        self.string_positions=None
+        self.note_game_window = None
+        self.note_game_fretboard = None
+        #KIFEJEZETTEN A JÁTÉK VÁLTOZÓI
+        self.guessed_note_count = 0
+        self.note_count = self.NOTE_COUNT_LIST[self.random_note]
+        
+
+        # GITÁROS ABLAK KREÁLÁSA
+        self.note_game_window = tk.Toplevel(root)
+        self.note_game_window.title("Find the Note")
+        self.note_game_window.geometry("1400x600")
+        self.note_game_fretboard = tk.Canvas(self.note_game_window,width=self.WIDTH,height=self.HEIGHT,bg="white")
+        self.note_game_fretboard.pack(pady=20)
+        self.fret_position,self.string_position=guitar_init(self.WIDTH,self.HEIGHT,self.note_game_fretboard)
+        #ABLAKRA GOMBOK
+        ntgame_button_frame = ttk.Frame(self.note_game_window)
+        ntgame_button_frame.pack(pady=20)
+        self.ntgame_label = ttk.Label(ntgame_button_frame,text=f"A hang:{self.random_note}",font=("Arial", 30))
+        self.ntgame_label.grid(row=0, column=0,pady=20)
+        self.ntgame_how_many_notes_label =ttk.Label(ntgame_button_frame,
+            text=f"Notes found:0/{self.note_count}",font=("Arial", 20))
+        self.ntgame_how_many_notes_label.grid(row=1,column=0,pady=20)
+
+        self.note_game_fretboard.bind("<Button-1>", self.fretboard_click)
+
+    def fretboard_click(self,event):
+        print("Hello")
+        note,clicked_string,clicked_fret=clicked_note(event.x,event.y,
+                                                      fret_position=self.fret_position,
+                                                      string_list=self.string_list,
+                                                      detailed_return=True)
+                
+        #ntgame_label.config(text=f"A hang {note}")
+        print(f"random_note: {self.random_note} - clicked_note: {note}")
+
+        y=self.string_position[clicked_string]
+        r=12
+        if clicked_fret == 0:
+            x=80
+        elif clicked_fret == 1:
+            x=(self.fret_position[1]+100)/2
+        else:
+            x=(self.fret_position[clicked_fret]+self.fret_position[clicked_fret-1])/2
+
+        if note == self.random_note: #HA JÓ A LENYOMOTT FRET
+            self.note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="green",outline="black",width=2,tags="guessed_note")
+            self.guessed_note_count += 1
+            self.ntgame_how_many_notes_label.config(text=f"Notes found:{self.guessed_note_count}/{self.note_count}")
+        else: #HA ROSSZ
+            self.note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="red",outline="black",width=2,tags="guessed_note")
+        #NOTE_ BELEÍRÁSA
+        note_text = self.string_list[clicked_string].note(clicked_fret,notation="sharp")
+        self.note_game_fretboard.create_text(x, y,text=note_text,fill="white",anchor="center", font=("Arial", 12))
