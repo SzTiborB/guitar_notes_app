@@ -60,6 +60,9 @@ fretboard.bind("<Button-1>", fretboard_click)
 #-------------------------------------------------------------------------------------------------
 def start_note_game():
     note_game = mt.ClickTheNoteGame(root=root,string_list=string_list)
+
+def free_chord_game():
+    chord_game = mt.FreeChordGame(root=root,string_list=string_list)
 #---------------------------------------------------------------------------------------------------------
 
 
@@ -79,8 +82,10 @@ kezdo_label = ttk.Label(button_frame,text="A hang:",font=("Arial", 30))
 kezdo_label.grid(row=0, column=0,pady=20)
 
 #BUTTON
-guess_the_note_button = ttk.Button(button_frame,text="Find the note",command=start_note_game)
+guess_the_note_button = ttk.Button(button_frame,text="Find the note game",command=start_note_game)
 guess_the_note_button.grid(row=1,column=1,pady=20)
+chords_game_button = ttk.Button(button_frame,text="Free Chord game",command=free_chord_game)
+chords_game_button.grid(row=2,column=1,pady=20)
 # SWITCH
 switch1_var = tk.BooleanVar(value=False)
 switch1 = ttk.Checkbutton(button_frame,text="Show notes on fretboard",
