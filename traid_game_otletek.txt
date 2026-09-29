@@ -1,0 +1,6 @@
+legyen egy label ami megadja a triádot
+
+alatta pedig legyen egy label ami ha a jó hangra kattintok a 3 hang közül ami
+a triádban szerepel kiírja azt az adott hangot
+
+így ha mind3 hangra kattintottam megkapom hogy pl: C A# Db

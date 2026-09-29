@@ -54,15 +54,20 @@ def fretboard_click(event):
     #print("y:", event.y)
     note=clicked_note(event.x,event.y)
     
-    kezdo_label.config(text=f"A hang {note}")
+    kezdo_label.config(text=f"Clicked note: {note}")
 fretboard.bind("<Button-1>", fretboard_click)
 
+#-----------------
+#--GOMBOK FÜGGVÉNYEI
 #-------------------------------------------------------------------------------------------------
 def start_note_game():
     note_game = mt.ClickTheNoteGame(root=root,string_list=string_list)
 
 def free_chord_game():
     chord_game = mt.FreeChordGame(root=root,string_list=string_list)
+
+def start_triad_game():
+    triad_game = mt.TriadGame(root=root,string_list=string_list)
 #---------------------------------------------------------------------------------------------------------
 
 
@@ -71,24 +76,31 @@ def free_chord_game():
 
 # -------------------------
 # Gombok területe
-# -------------------------
 button_frame = ttk.Frame(root)
-button_frame.pack(pady=20)
-# ttk.Button(button_frame, text="Notes").grid(row=0, column=0, padx=10)
-# ttk.Button(button_frame, text="Intervals").grid(row=0, column=1, padx=10)
-# ttk.Button(button_frame, text="New question").grid(row=0, column=2, padx=10)
+button_frame.pack(pady=0)
+# -------------------------
+button_left_frame = ttk.Frame(button_frame)
+button_left_frame.pack(side="left",padx=20)
+button_right_frame = ttk.Frame(button_frame)
+button_right_frame.pack(side="right",padx=20)
 
-kezdo_label = ttk.Label(button_frame,text="A hang:",font=("Arial", 30))
-kezdo_label.grid(row=0, column=0,pady=20)
+
+kezdo_label = ttk.Label(button_right_frame,text="Clicked note:",font=("Arial", 20),width=20,anchor="w")
+kezdo_label.grid(row=0, column=0,pady=10)
 
 #BUTTON
-guess_the_note_button = ttk.Button(button_frame,text="Find the note game",command=start_note_game)
-guess_the_note_button.grid(row=1,column=1,pady=20)
-chords_game_button = ttk.Button(button_frame,text="Free Chord game",command=free_chord_game)
-chords_game_button.grid(row=2,column=1,pady=20)
+guess_the_note_button = ttk.Button(button_left_frame,text="Find the note game",command=start_note_game)
+guess_the_note_button.grid(row=1,column=1,pady=10)
+guess_the_note_button.config(padding=(10,10))
+chords_game_button = ttk.Button(button_left_frame,text="Free Chord game",command=free_chord_game)
+chords_game_button.grid(row=2,column=1,pady=10)
+chords_game_button.config(padding=(10,10))
+triad_game_button = ttk.Button(button_left_frame,text="Triad game",command=start_triad_game)
+triad_game_button.grid(row=3,column=1,pady=10)
+triad_game_button.config(padding=(10,10)) #paddinget így csak configben lehet megadni
 # SWITCH
 switch1_var = tk.BooleanVar(value=False)
-switch1 = ttk.Checkbutton(button_frame,text="Show notes on fretboard",
+switch1 = ttk.Checkbutton(button_right_frame,text="Show notes on fretboard",
                          variable=switch1_var,command=switch1_changed)
 switch1.grid(row=1,column=0,pady=20)
 #--------------------------
@@ -122,7 +134,7 @@ bottom_fretboard_border = string_list[-1].y+20
 for i in range(len(string_list)-1):
     border_y=(string_list[i].y+string_list[i+1].y)/2
     string_list[i].set_border_y(border_y)
-    fretboard.create_line(100, border_y, 1300, border_y,width=2,fill="red")
+    #fretboard.create_line(100, border_y, 1300, border_y,width=2,fill="red") #-----KELL E PIROS SEGÉDVONAL
 string_list[5].set_border_y(bottom_fretboard_border)
 #endregion
 #----------------------------------------------------

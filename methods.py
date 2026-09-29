@@ -582,6 +582,8 @@ class ClickTheNoteGame:
             self.guessed_note_count = 0
             self.note_count = self.NOTE_COUNT_WITH_OCTAVE[self.random_note]
             self.chord_notes =[]
+            self.ntgame_label.config(text=f"A hang:{self.random_note}")
+            self.ntgame_how_many_notes_label.config(text=f"Notes found:0/{self.note_count}")
         #-----------HA SIKERÜLT END -------------
 
 
@@ -687,6 +689,135 @@ class FreeChordGame:
             self.chord_notes.remove(fret_index)
             print(f"{self.create_index_tag(fret_index,clicked_string)}")
         #------------------------------------------------------------------------------- IF END -----------
+
+
+    def create_index_tag(self,fret_index,clicked_string):
+        text = "guessed_note_"+str(fret_index)+"_"+str(clicked_string)
+        return text
+
+class TriadGame:
+    WIDTH = 1300
+    HEIGHT = 300
+    TRIAD_TYPES = {
+        "Major":[4,7],
+        "Minor":[3,7],
+        "Diminished":[3,6],
+        "Augmented":[4,8]
+    }
+
+
+
+    def __init__(self,root,string_list):
+        self.random_root_note_index = random.randint(0,40) #csak 40-ig hogy AUG kiférjen
+        self.random_root_note = FRET_INDEX_NOTES[self.random_root_note_index]
+        self.random_triad_name = random.choice(list(self.TRIAD_TYPES.keys()))
+        print("################")
+        print(self.TRIAD_TYPES[self.random_triad_name][0])
+        self.triad_notes_index_list = [self.random_root_note_index,
+                                       (self.random_root_note_index+self.TRIAD_TYPES[self.random_triad_name][0]),
+                                       (self.random_root_note_index+self.TRIAD_TYPES[self.random_triad_name][1])]
+        print(self.random_triad_name)
+        print(self.triad_notes_index_list)
+        self.string_list = string_list
+        self.note_count=3 # hiszen TRIádokról beszélünk
+        self.guessed_note_count =0
+        #AZ ABLAK VÁLTOZÓI?
+        self.fret_positions=None
+        self.string_positions=None
+        self.note_game_window = None
+        self.note_game_fretboard = None
+        #AHHOZ HOGY TÖBB KATTINTOTT NOTE_-OT LEHESSEN KEZELNI
+        self.already_clicked_note = []
+
+
+        # GITÁROS ABLAK KREÁLÁSA
+        self.note_game_window = tk.Toplevel(root)
+        self.note_game_window.title("Find the triad")
+        self.note_game_window.geometry("1400x600")
+        self.note_game_fretboard = tk.Canvas(self.note_game_window,width=self.WIDTH,height=self.HEIGHT,bg="white")
+        self.note_game_fretboard.pack(pady=20)
+        self.fret_position,self.string_position=guitar_init(self.WIDTH,self.HEIGHT,self.note_game_fretboard)
+        #ABLAKRA GOMBOK
+        ntgame_button_frame = ttk.Frame(self.note_game_window)
+        ntgame_button_frame.pack(pady=20)
+        self.ntgame_label = ttk.Label(ntgame_button_frame,
+                                      text=f"The triad: {self.random_root_note} {self.random_triad_name}",font=("Arial", 30))
+        self.ntgame_label.grid(row=0, column=0,pady=20)
+        self.ntgame_how_many_notes_label =ttk.Label(ntgame_button_frame,
+            text=f"Notes found:0/{3}",font=("Arial", 20))
+        self.ntgame_how_many_notes_label.grid(row=1,column=0,pady=20)
+
+        self.note_game_fretboard.bind("<Button-1>", self.fretboard_click)
+
+    def fretboard_click(self,event):
+
+        # create_index_tag -> egy stringet csinál amiben a STRING ÉS FRET benne van így egyértelműen
+        # azonosítható a lefogott fret
+        fret_index, clicked_string,clicked_fret=clicked_fret_index(event.x,event.y,fret_position=self.fret_position,
+                                                                    string_list=self.string_list,detailed_return=True)
+        note = FRET_INDEX_NOTES[fret_index]
+            
+        tag = self.create_index_tag(fret_index,clicked_string)
+
+        if tag not in self.already_clicked_note: #----------IF ----------
+            self.already_clicked_note.append(tag)
+            #self.chord_notes.append(fret_index)
+
+            y=self.string_position[clicked_string]
+            r=12
+            if clicked_fret == 0:
+                x=80
+            elif clicked_fret == 1:
+                x=(self.fret_position[1]+100)/2
+            else:
+                x=(self.fret_position[clicked_fret]+self.fret_position[clicked_fret-1])/2
+
+            if fret_index in self.triad_notes_index_list: #HA JÓ A LENYOMOTT FRET
+                self.note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="green",outline="black",width=2,
+                                                     tags=tag)
+                self.guessed_note_count += 1
+                self.ntgame_how_many_notes_label.config(text=f"Notes found:{self.guessed_note_count}/{3}")
+                #sound.play_chord(self.chord_notes)
+            else: #HA ROSSZ
+                self.note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="red",outline="black",width=2,
+                                                     tags=tag)
+                #sound.play_chord(self.chord_notes)
+            #NOTE_ BELEÍRÁSA
+            note_text = self.string_list[clicked_string].note(clicked_fret,notation="sharp")
+            self.note_game_fretboard.create_text(x, y,text=note_text,fill="white",anchor="center", font=("Arial", 12),
+                                                 tags=tag)
+
+            
+        else:
+            self.already_clicked_note.remove(tag)
+            self.note_game_fretboard.delete(self.create_index_tag(fret_index,clicked_string))
+            
+            print(f"{self.create_index_tag(fret_index,clicked_string)}")
+        #------------------------------------------------------------------------------- IF END -----------
+
+                #-------------- HA SIKERÜLT ---------------
+        if self.guessed_note_count == self.note_count:
+            self.ntgame_label.config(text=" YOU WIN ")
+            self.note_game_window.update_idletasks()
+            time.sleep(2)
+            #------- RESET THE GAME
+            for item in self.already_clicked_note:
+                self.note_game_fretboard.delete(item)
+
+            self.random_root_note_index = random.randint(0,40) #csak 40-ig hogy AUG kiférjen
+            self.random_root_note = FRET_INDEX_NOTES[self.random_root_note_index]
+            self.random_triad_name = random.choice(list(self.TRIAD_TYPES.keys()))
+            self.triad_notes_index_list = [self.random_root_note_index,
+                                       (self.random_root_note_index+self.TRIAD_TYPES[self.random_triad_name][0]),
+                                       (self.random_root_note_index+self.TRIAD_TYPES[self.random_triad_name][1])] 
+            self.already_clicked_note = []
+            self.guessed_note_count = 0
+            self.chord_notes =[]
+            self.ntgame_label.config(text=f"The triad: {self.random_root_note} {self.random_triad_name}")
+            self.ntgame_how_many_notes_label.config(text=f"Notes found:0/{self.note_count}")
+        #-----------HA SIKERÜLT END -------------
+
+
 
 
     def create_index_tag(self,fret_index,clicked_string):
