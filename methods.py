@@ -721,6 +721,7 @@ class TriadGame:
         self.string_list = string_list
         self.note_count=3 # hiszen TRIádokról beszélünk
         self.guessed_note_count =0
+        self.triad_note_indexes =[]
         #AZ ABLAK VÁLTOZÓI?
         self.fret_positions=None
         self.string_positions=None
@@ -776,12 +777,13 @@ class TriadGame:
                 self.note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="green",outline="black",width=2,
                                                      tags=tag)
                 self.guessed_note_count += 1
+                self.triad_note_indexes.append(fret_index)
                 self.ntgame_how_many_notes_label.config(text=f"Notes found:{self.guessed_note_count}/{3}")
-                #sound.play_chord(self.chord_notes)
+                sound.play_chord(self.triad_note_indexes)
             else: #HA ROSSZ
                 self.note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="red",outline="black",width=2,
                                                      tags=tag)
-                #sound.play_chord(self.chord_notes)
+                sound.play_chord([fret_index])
             #NOTE_ BELEÍRÁSA
             note_text = self.string_list[clicked_string].note(clicked_fret,notation="sharp")
             self.note_game_fretboard.create_text(x, y,text=note_text,fill="white",anchor="center", font=("Arial", 12),
@@ -803,7 +805,7 @@ class TriadGame:
             #------- RESET THE GAME
             for item in self.already_clicked_note:
                 self.note_game_fretboard.delete(item)
-
+            self.triad_note_indexes =[]
             self.random_root_note_index = random.randint(0,40) #csak 40-ig hogy AUG kiférjen
             self.random_root_note = FRET_INDEX_NOTES[self.random_root_note_index]
             self.random_triad_name = random.choice(list(self.TRIAD_TYPES.keys()))
