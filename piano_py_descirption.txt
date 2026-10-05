@@ -1,0 +1,10 @@
+
+
+# A NOTE KÖRÖKBEN KIJELZÉS TÖRLÉSE KATTINTÁSSAL
+Ahhoz hogy kattintásra lekerüljön egy hangbogyó mindegyik bogyót tag-gel látok el
+-ez a tag a piano esetében noteID ("C#_2", "F_4")
+-viszont a gitár esetében string is kell hogy egyértelű legyen a hozzádrendelés
+    ebben az esetben a tag guitar_tag ("C#_2_string5")
+-a gitár és piano tagek 2 tömbben vannak tárolva: 
+    clicked_notes_piano = []
+    clicked_notes_guitar = []

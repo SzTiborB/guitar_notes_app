@@ -695,6 +695,7 @@ class FreeChordGame:
         text = "guessed_note_"+str(fret_index)+"_"+str(clicked_string)
         return text
 
+
 class TriadGame:
     WIDTH = 1300
     HEIGHT = 300
@@ -778,7 +779,7 @@ class TriadGame:
                                                      tags=tag)
                 self.guessed_note_count += 1
                 self.triad_note_indexes.append(fret_index)
-                self.ntgame_how_many_notes_label.config(text=f"Notes found:{self.guessed_note_count}/{3}")
+                self.ntgame_how_many_notes_label.config(text=f"Notes found:{len(self.triad_note_indexes)}/{3}")
                 sound.play_chord(self.triad_note_indexes)
             else: #HA ROSSZ
                 self.note_game_fretboard.create_oval(x-r, y-r,x+r, y+r,fill="red",outline="black",width=2,
@@ -793,12 +794,13 @@ class TriadGame:
         else:
             self.already_clicked_note.remove(tag)
             self.note_game_fretboard.delete(self.create_index_tag(fret_index,clicked_string))
-            
-            print(f"{self.create_index_tag(fret_index,clicked_string)}")
+            if fret_index in self.triad_note_indexes: #ha egy zöld bogyót leveszünk, kerüljön ki a listából is
+                self.triad_note_indexes.remove(fret_index)
+            #print(f"{self.create_index_tag(fret_index,clicked_string)}")
         #------------------------------------------------------------------------------- IF END -----------
 
                 #-------------- HA SIKERÜLT ---------------
-        if self.guessed_note_count == self.note_count:
+        if len(self.triad_note_indexes) == self.note_count:
             self.ntgame_label.config(text=" YOU WIN ")
             self.note_game_window.update_idletasks()
             time.sleep(2)
