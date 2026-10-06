@@ -261,12 +261,12 @@ def draw_note_in_circle(center_x,center_y,note_text,radius=12,fill="green",tag =
     keyboard.create_text(center_x, center_y,text=note_text,fill="white",anchor="center", font=("Arial", 10),
                                                  tags=tag)
 
-def draw_note_in_circle_guitar(center_x,center_y,note_text,radius=12,fill="green"):
+def draw_note_in_circle_guitar(center_x,center_y,note_text,radius=12,fill="green",tag = "clicked_notes"):
     r=radius
     fretboard.create_oval(center_x-r, center_y-r,center_x+r, center_y+r,fill=fill,outline="black",width=2,
-                                                     tags="clicked_notes")
+                                                     tags=tag)
     fretboard.create_text(center_x, center_y,text=note_text,fill="white",anchor="center", font=("Arial", 10),
-                                                 tags="clicked_notes")
+                                                 tags=tag)
     
 def keyboard_click(event):
     
@@ -300,7 +300,6 @@ def keyboard_click(event):
         keyboard.delete(note_ID)
         clicked_notes_piano.remove(note_ID)
 
-
 def fretboard_click(event):
 
     #clicked string:
@@ -327,12 +326,28 @@ def fretboard_click(event):
             break
     note_ID = clicked_note+"_"+str(oktav)
 
-    update_keyboard(note_ID)
-    update_fretboard(note_ID,clicked_string=clicked_string)
+    #KERÁLJUK A TAG-et -> hang + string kell hozzá
+    note_ID_tag = note_ID+"_string"+str(clicked_string)
+    if note_ID_tag not in clicked_notes_guitar:
+        update_keyboard(note_ID)
+        update_fretboard(note_ID,clicked_string=clicked_string)
+    elif note_ID_tag in clicked_notes_guitar:
+        print("ALREADY IN")
+        print(f"clicked: {note_ID_tag}")
+        print(f"the list: {clicked_notes_guitar}")
+        fretboard.delete(note_ID_tag)
+        clicked_notes_guitar.remove(note_ID_tag)  
 
 def reset_notes():
-    keyboard.delete("clicked_notes")
-    fretboard.delete("clicked_notes")
+    #piano
+    for i in range(len(clicked_notes_piano)):
+        keyboard.delete(clicked_notes_piano[i])
+    clicked_notes_piano = []
+
+    #Guitar
+    for i in range(len(clicked_notes_guitar)):
+        fretboard.delete(clicked_notes_guitar[i])
+    clicked_notes_guitar = []
 
 def parse_noteID(note_ID):
     note,octave = note_ID.split("_")
@@ -363,6 +378,11 @@ def update_keyboard(note_ID): # A HANGOK BERAZJOLÁSÁRA
 def update_fretboard(note_ID,clicked_string=None):
     #ha meg van adva melyik húrn játszottuk le (tehár ha a gitárra nyomtam és nem a pianoról érkezik az info)
     #akkor arra a húrra rakja rá a hangot
+    print(f"NOTES_GUITAR_CLCIKED: {clicked_notes_guitar}")
+    #A NOTE_ IN CRICLE tagje
+    note_ID_tag = note_ID+"_string"+str(clicked_string)
+    clicked_notes_guitar.append(note_ID_tag)
+
     note_ID_dict = parse_noteID(note_ID)
     oktav= note_ID_dict["octave"]-2 #A noteID a tényleges oktávot használja, de for ciklushoz ezt igazítani kell
     note =note_ID_dict["note"]
@@ -371,7 +391,6 @@ def update_fretboard(note_ID,clicked_string=None):
     note_index_raw = next(key for key, value in note_indexes.items() if value == note)
     note_w_okt_offset = note_index_raw + 12*oktav
     string_fret_offsets = {5:0,4:5,3:10,2:15,1:19,0:24} 
-    print(f"clicked_note: {note_w_okt_offset}")
 
     #WORK IN PROGRESS-----------
     #HA PIANO KATTINTÁS HOZOTT IDE MINKET
@@ -394,7 +413,7 @@ def update_fretboard(note_ID,clicked_string=None):
         print(f"húr: {clicked_string}, fret {clicked_fret}")
         center_x = (fret_borders[clicked_fret]+fret_borders[clicked_fret+1])/2
         center_y= (string_borders[clicked_string]+string_borders[clicked_string+1])/2
-        draw_note_in_circle_guitar(center_x=center_x,center_y=center_y,note_text=note)
+        draw_note_in_circle_guitar(center_x=center_x,center_y=center_y,note_text=note,tag=note_ID_tag)
 
 
 
