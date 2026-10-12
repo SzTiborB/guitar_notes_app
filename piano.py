@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-import piano_methods as pmt
 
 root = tk.Tk()
 root.title("Piano keyboard")
@@ -27,6 +26,10 @@ keyboard.pack(pady=20)
 
 clicked_notes_piano = []
 clicked_notes_guitar = []
+#AZ ELSŐ LEFOGOTT HANG (általában root): később self.root
+first_played_note =[]
+
+
 
 #region- keyboard init
 #DIMENSONS
@@ -37,7 +40,6 @@ keyboard_dark_bottom = (3/5)*HEIGHT
 white_key_width = 40
 dark_key_width = white_key_width/1.5
 white_key_width=(keyboard_right-keyboard_left)/(4*7)
-print(white_key_width)
 
 
 
@@ -229,10 +231,6 @@ for i in range(len(string_position)-1):
     string_border.append(border)
 string_border.append(guitar_neck_bottom_y)
 
-# for border in string_border:
-#     print(f"border: {border}")
-#     fretboard.create_line(100,border,300,border,width=2,fill="red")
-
 guitar_borders = {"fret":fret_position,  
                   "string":string_border}
 #endregion
@@ -241,13 +239,6 @@ guitar_borders = {"fret":fret_position,
 print(fret_position)
 print(string_border)
 
-
-
-
-
-#print(keyboard_white_borders)
-#print(keyboard_dark_borders)
-#print(keyboard_ocatve_borders)
 
 
 
@@ -290,7 +281,6 @@ def keyboard_click(event):
             if event.x > keyboard_white_borders[oktav][i] and event.x < keyboard_white_borders[oktav][i+1]:
                 clicked_note = NOTES_DICT[i]
                 note_ID = clicked_note+"_"+str(oktav+2)
-                print(note_ID)
 
     #MEGNÉZZÜK HOGY HOZZÁADNI VAGY TÖRÖLNI KELL A NOTE_-OT
     if note_ID not in clicked_notes_piano:
@@ -332,9 +322,6 @@ def fretboard_click(event):
         update_keyboard(note_ID)
         update_fretboard(note_ID,clicked_string=clicked_string)
     elif note_ID_tag in clicked_notes_guitar:
-        print("ALREADY IN")
-        print(f"clicked: {note_ID_tag}")
-        print(f"the list: {clicked_notes_guitar}")
         fretboard.delete(note_ID_tag)
         clicked_notes_guitar.remove(note_ID_tag)  
 
@@ -342,12 +329,15 @@ def reset_notes():
     #piano
     for i in range(len(clicked_notes_piano)):
         keyboard.delete(clicked_notes_piano[i])
-    clicked_notes_piano = []
+    clicked_notes_piano.clear()
 
     #Guitar
     for i in range(len(clicked_notes_guitar)):
         fretboard.delete(clicked_notes_guitar[i])
-    clicked_notes_guitar = []
+    clicked_notes_guitar.clear()
+
+    #root note-ot is törli
+    first_played_note.clear()
 
 def parse_noteID(note_ID):
     note,octave = note_ID.split("_")
@@ -378,7 +368,6 @@ def update_keyboard(note_ID): # A HANGOK BERAZJOLÁSÁRA
 def update_fretboard(note_ID,clicked_string=None):
     #ha meg van adva melyik húrn játszottuk le (tehár ha a gitárra nyomtam és nem a pianoról érkezik az info)
     #akkor arra a húrra rakja rá a hangot
-    print(f"NOTES_GUITAR_CLCIKED: {clicked_notes_guitar}")
     #A NOTE_ IN CRICLE tagje
     note_ID_tag = note_ID+"_string"+str(clicked_string)
     clicked_notes_guitar.append(note_ID_tag)
@@ -396,24 +385,51 @@ def update_fretboard(note_ID,clicked_string=None):
     #HA PIANO KATTINTÁS HOZOTT IDE MINKET
     if clicked_string == None:
         
-        print("piano")
         #MELYIK HÚROKON HANYADIKKÉNT VAN RAJTA
         note_on_string_at_fret = {}
         for i in range(6):
             string_base = string_fret_offsets[i]
             if note_w_okt_offset >= string_base and note_w_okt_offset <= (string_base+24):
                 note_on_string_at_fret[i]=note_w_okt_offset-string_base
+        print(note_on_string_at_fret)
 
-    #DONE-----------
+        #HÚR HOZZÁRENDELÉSE------------------
+        #Ha ez az első lejátszott
+        if len(first_played_note) == 0:
+            for string, fret in note_on_string_at_fret.items():
+                if 5 <= fret <= 9:
+                    clicked_string = string
+                    clicked_fret = fret
+                    break
+            first_played_note.append({"string":clicked_string,"fret":clicked_fret})
+
+        #Ha már játszottunk előtte le hangot ahhoz fog igazodni a skála
+        else:
+            root_note = first_played_note[0]
+            #pontszámot adnuk minden lehetséges 
+            points_scored_list = []
+            print(f"root pos: {root_note["string"]} - {root_note["fret"]}")
+            for string, fret in note_on_string_at_fret.items():
+                score_1 = abs(root_note["string"]-string)*3.5
+                score_2 = abs(root_note["fret"]-fret)
+                points_scored_list.append([string,fret,(score_1+score_2)])
+            print(points_scored_list)
+            best_position = min(points_scored_list, key=lambda x: x[2])
+            clicked_string = best_position[0]
+            clicked_fret = best_position[1]
+
+    
     #HA A GITÁRRA KATTINTOTTUNK AKKOR ARRA A HÚRRA TEGYE AMIRE KATTINTOTTUNK
     else:
-        string_borders = guitar_borders["string"]
-        fret_borders = guitar_borders["fret"]
         clicked_fret = note_w_okt_offset-string_fret_offsets[clicked_string]
-        print(f"húr: {clicked_string}, fret {clicked_fret}")
-        center_x = (fret_borders[clicked_fret]+fret_borders[clicked_fret+1])/2
-        center_y= (string_borders[clicked_string]+string_borders[clicked_string+1])/2
-        draw_note_in_circle_guitar(center_x=center_x,center_y=center_y,note_text=note,tag=note_ID_tag)
+
+    #NOTE_ RAJZOLÁSA
+    string_borders = guitar_borders["string"]
+    fret_borders = guitar_borders["fret"]
+    print(f"húr: {clicked_string}, fret {clicked_fret}")
+    center_x = (fret_borders[clicked_fret]+fret_borders[clicked_fret+1])/2
+    center_y= (string_borders[clicked_string]+string_borders[clicked_string+1])/2
+    draw_note_in_circle_guitar(center_x=center_x,center_y=center_y,note_text=note,tag=note_ID_tag)
 
 
 
