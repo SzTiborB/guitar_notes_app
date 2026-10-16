@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-import threading
 import random
+import time
 
 
 class Piano():
@@ -38,6 +38,8 @@ class Piano():
         white_key_width = 40
         dark_key_width = white_key_width/1.5
         white_key_width=(keyboard_right-keyboard_left)/(4*7)
+        #oktáv a keyboard handling-hez
+        self.octave_keyboard_midi_offset = 0
 
         #LINE DRAWING
         #borders
@@ -112,10 +114,10 @@ class Piano():
         self.draw_note_in_circle(center_x,center_y,note,tag=note_ID)
 
     #A MIDI OKTÁVJAI NEM MINDIG STIMMELNEK, EZT KEZELENDŐ
-    def update_keyboard_from_midi(self,note_ID):
+    def update_keyboard_from_midi(self,note_ID,color="green"):
         self.clicked_notes_piano.append(note_ID)
         note_ID_dict = self.parse_noteID(note_ID)
-        oktav= 3 ########################################
+        oktav=  note_ID_dict["octave"]-self.octave_keyboard_midi_offset########################################
         note =note_ID_dict["note"]
         is_sharp =note_ID_dict["is_sharp"]
 
@@ -127,15 +129,24 @@ class Piano():
             note_index = next(key for key, value in self.NOTES_DICT.items() if value == note)-10 # a sharp-ok kódolása miatt
             center_x=(self.keyboard_dark_borders[oktav][note_index][0]+self.keyboard_dark_borders[oktav][note_index][1])/2
             center_y = (0+self.keyboard_dark_bottom)*(2/3) #keyboard_top és dark_bottom 2/3-a
-        self.draw_note_in_circle(center_x,center_y,note,tag=note_ID)
+        self.draw_note_in_circle(center_x,center_y,note,fill=color)
 
+    def remove_notes_in_circle(self):
+        self.keyboard.delete("clicked_notes")
 
 
 class Piano_Scale_Game:
     def __init__(self,piano,root):
         piano:Piano
+        #EHHEZ A PIANO KEYBOARD-HOZ TARTOZIK A JÁTÉK
+        self.piano_object = piano
         WIDTH = 1300
         HEIGHT = 200
+        #jatekhoz valtozok
+        self.guessed_notes =[]
+
+
+
         #GOMBOK TERÜLETE----------
         #létrehozás
         self.button_board = tk.Frame(root,width=WIDTH,height=HEIGHT,bg="white")
@@ -166,6 +177,30 @@ class Piano_Scale_Game:
         self.left_3.grid(row=2, column=0, sticky="nsew")
         self.middle_3.grid(row=2, column=1, sticky="nsew")
         self.right_3.grid(row=2,column=2,sticky="nsew")
+
+        #grid elemei gombok-labelek-checkboxok
+        #felső sor
+        self.octave_keyboard_offset = tk.IntVar(value=0)
+        spinbox = tk.Spinbox(self.right_1,from_=-3,to=3,
+                             textvariable=self.octave_keyboard_offset,width=4,font=("Arial", 15))
+        spinbox.pack(ipadx=10, ipady=10)
+        self.scale_label = tk.Label(self.middle_1,text="",font=("Arial", 25))
+        self.scale_label.pack()
+
+        #középső sor
+        self.show_scale_steps_var = tk.BooleanVar(value=False)
+        scale_step_checkbox = tk.Checkbutton(self.left_2,text="Don't show scale steps",
+                                    variable=self.show_scale_steps_var,command=self.on_scalestep_checkbox_changed)
+        scale_step_checkbox.pack(pady=60)
+        self.scale_steps_label = tk.Label(self.middle_2,text="",font=("Arial", 25))
+        self.scale_steps_label.pack(pady=50)
+
+        #alsó sor
+        self.reset_button = tk.Button(self.middle_3,text="Reset",command=self.reset_game)
+        self.reset_button.pack()
+
+        #GOMBOK TERÜLETE##################
+
         #méretváltozások letiltása -> innentől kezdve nem méretez automatikusan
         self.left_1.grid_propagate(False)
         self.middle_1.grid_propagate(False)
@@ -176,29 +211,6 @@ class Piano_Scale_Game:
         self.left_3.grid_propagate(False)
         self.middle_3.grid_propagate(False)
         self.right_3.grid_propagate(False)
-        #grid elemei gombok-labelek-checkboxok
-        #felső sor
-        self.scale_label = tk.Label(self.middle_1,text="",font=("Arial", 25))
-        self.scale_label.pack()
-        self.note_label_right = tk.Label(self.right_1,text="  ",font=("Arial", 25)) #jobb oldalra egy label
-        self.note_label_right.pack()
-
-        #középső sor
-        self.show_scale_steps_var = tk.BooleanVar(value=False)
-        scale_step_checkbox = tk.Checkbutton(self.left_2,text="Don't show scale steps",
-                                    variable=self.show_scale_steps_var,command=self.on_scalestep_checkbox_changed)
-        scale_step_checkbox.pack(pady=60)
-        self.scale_steps_label = tk.Label(self.middle_2,text="",font=("Arial", 25))
-        self.scale_steps_label.pack(pady=50)
-
-        #DEBUG MIATT:
-        self.left_1.configure(bg="green")
-        self.middle_1.configure(bg="blue")
-        self.right_1.configure(bg="red")
-        self.left_2.configure(bg="red")
-        self.middle_2.configure(bg="green")
-        self.right_2.configure(bg="blue")
-        #GOMBOK TERÜLETE##################
 
 
         #RANDOM SKÁLA
@@ -210,9 +222,8 @@ class Piano_Scale_Game:
         self.update_label_texts()
         
         
-
-
     def on_scalestep_checkbox_changed(self):
+        print(f"valtozo: {self.octave_keyboard_offset.get()}")
         if self.show_scale_steps_var.get():
             self.scale_steps_label.config(text="")
         else:
@@ -243,12 +254,12 @@ class Piano_Scale_Game:
             "Arabic":               ["H WH H W H WH H", [1,3,1,2,1,3,1]]
         }
         random_scale_weights = [
-            20,  # Ionian (Major)
+            100,  # Ionian (Major)
             3,   # Dorian
             3,   # Phrygian
             3,   # Lydian
             3,   # Mixolydian
-            20,  # Aeolian (Natural Minor)
+            100,  # Aeolian (Natural Minor)
             3,   # Locrian
             3,   # Harmonic Minor
             3,   # Melodic Minor
@@ -299,3 +310,57 @@ class Piano_Scale_Game:
     def update_label_texts(self):
         self.scale_label.config(text=self.random_scale_name)
         self.scale_steps_label.config(text=self.random_scale_wh_steps)
+
+    def set_piano_keyboard_offset(self,piano):
+        piano : Piano
+        piano.octave_keyboard_midi_offset = self.octave_keyboard_offset.get() + 3
+        #print(f"Jelenlegi oktav: {self.octave_keyboard_offset.get()}")
+
+    def parse_noteID(self,note_ID):
+        note,octave = note_ID.split("_")
+        if "#" in note:
+            is_sharp = True
+        else:
+            is_sharp = False
+        octave = int(octave)
+        return  {"note": note, "is_sharp":is_sharp,"octave":octave}
+
+    def is_note_in_random_scale(self,piano,guessed_noteID):
+        noteID_dict = self.parse_noteID(guessed_noteID)
+        note = noteID_dict["note"]
+        piano : Piano
+        print(f"guessed_note: {note}")
+        if note in self.random_scale_notes:
+            piano.update_keyboard_from_midi(guessed_noteID,color="green")
+            if note not in self.guessed_notes:
+                self.guessed_notes.append(note)
+            #HA AZ UTOLSÓ (oktáv note) LEÜTJÜK A BILLENTYŰN:
+            elif len(self.random_scale_notes)-len(self.guessed_notes) == 1 and note == self.random_scale_notes[0]:
+                self.guessed_notes.append(note)
+        else:
+            piano.update_keyboard_from_midi(guessed_noteID,color="red")
+
+    def reset_game(self):
+        self.guessed_notes = []
+        self.piano_object.remove_notes_in_circle()
+        self.generate_random_scale()
+        self.update_label_texts()
+
+
+    #EZ FUSSON LE MINDEN CLICK/KEYBOARD LEUTESNEL
+    def key_pressed(self,note_ID,piano):
+        piano : Piano
+        self.set_piano_keyboard_offset(piano)
+        self.is_note_in_random_scale(guessed_noteID=note_ID,piano=piano) #note-bogyók berajzolása
+        print(f"len guessed: {len(self.guessed_notes)}")
+        print(f"len scale: {len(self.random_scale_notes)}")
+
+        #HA A MINDEN NOTE_-OT ELTALÁLTUNK:
+        if len(self.guessed_notes) == len(self.random_scale_notes):
+            self.scale_label.config(text="Correct")
+            self.scale_label.update() #MANUALIS TKINTER UPDATE
+            time.sleep(1)
+            self.guessed_notes = []
+            self.generate_random_scale()
+            self.update_label_texts()
+            self.piano_object.remove_notes_in_circle()
