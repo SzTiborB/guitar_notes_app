@@ -136,7 +136,7 @@ class Piano():
 
 
 class Piano_Scale_Game:
-    def __init__(self,piano,root):
+    def __init__(self,piano,root,already_completed_scales):
         piano:Piano
         #EHHEZ A PIANO KEYBOARD-HOZ TARTOZIK A JÁTÉK
         self.piano_object = piano
@@ -144,7 +144,8 @@ class Piano_Scale_Game:
         HEIGHT = 200
         #jatekhoz valtozok
         self.guessed_notes =[]
-
+        self.done_scales = 0
+        self.already_completed_scales = already_completed_scales #json file-ból betöltve
 
 
         #GOMBOK TERÜLETE----------
@@ -198,7 +199,11 @@ class Piano_Scale_Game:
         #alsó sor
         self.reset_button = tk.Button(self.middle_3,text="Reset",command=self.reset_game)
         self.reset_button.pack()
-
+        self.done_scales_label = tk.Label(self.left_3,text=f"Scales done: {self.done_scales}",font=("Arial", 10))
+        self.done_scales_label.pack()
+        self.already_completed_scales_label =tk.Label(self.left_3,text=f"Alltime: {self.already_completed_scales}",
+                                                      font=("Arial", 10))
+        self.already_completed_scales_label.pack(pady=5)
         #GOMBOK TERÜLETE##################
 
         #méretváltozások letiltása -> innentől kezdve nem méretez automatikusan
@@ -309,7 +314,11 @@ class Piano_Scale_Game:
 
     def update_label_texts(self):
         self.scale_label.config(text=self.random_scale_name)
-        self.scale_steps_label.config(text=self.random_scale_wh_steps)
+        if self.show_scale_steps_var == False:
+            self.scale_steps_label.config(text=self.random_scale_wh_steps)
+        self.done_scales_label.config(text=f"Scales done: {self.done_scales}")
+        self.already_completed_scales_label.config(
+            text=f"Alltime: {self.already_completed_scales}")
 
     def set_piano_keyboard_offset(self,piano):
         piano : Piano
@@ -357,6 +366,8 @@ class Piano_Scale_Game:
 
         #HA A MINDEN NOTE_-OT ELTALÁLTUNK:
         if len(self.guessed_notes) == len(self.random_scale_notes):
+            self.done_scales += 1
+            self.already_completed_scales +=1
             self.scale_label.config(text="Correct")
             self.scale_label.update() #MANUALIS TKINTER UPDATE
             time.sleep(1)
@@ -364,3 +375,62 @@ class Piano_Scale_Game:
             self.generate_random_scale()
             self.update_label_texts()
             self.piano_object.remove_notes_in_circle()
+
+
+class Piano_Interval_Game:
+
+    def __init__(self):
+        pass
+
+    def generate_random_intervals(self,interval_count):
+        interval_dict = {
+        1: "minor 2nd",
+        2: "Major 2nd",
+        3: "minor 3rd / aug 2nd",
+        4: "Major 3rd",
+        5: "Perfect 4th",
+        6: "diminished 5th / Tritone",
+        7: "Perfect 5th",
+        8: "minor 6th / aug 5th",
+        9: "Major 6th",
+        10: "minor 7th",
+        11: "Major 7th",
+        12: "Octave"}
+
+        NOTE_DICT = {
+            0: "C",
+            1: "C#",
+            2: "D",
+            3: "D#",
+            4: "E",
+            5: "F",
+            6: "F#",
+            7: "G",
+            8: "G#",
+            9: "A",
+            10: "A#",
+            11: "B"
+        }
+
+        random_intervals = sorted(random.sample(range(1, 13), interval_count))
+        print(random_intervals)
+        random_root_note_index = random.randint(0,11)
+        random_root_note = NOTE_DICT[random_root_note_index%12]
+        random_interval_indexes = [random_root_note_index]
+        for interval in random_intervals:
+            random_interval_indexes.append(random_root_note_index+interval)
+        random_interval_notes = []
+        for index in random_interval_indexes:
+            note = NOTE_DICT[index%12]
+            random_interval_notes.append(note)
+        random_interval_labels = []
+        #for---> interval label
+
+        print(f"ROOT: {random_root_note}")
+        print(f"Intervals: {random_interval_indexes}")
+        print(f"ALL NOTES: {random_interval_notes}")
+        
+
+    
+test_object=Piano_Interval_Game()
+test_object.generate_random_intervals(3)        
