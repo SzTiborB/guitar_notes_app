@@ -181,9 +181,11 @@ class Piano_Scale_Game:
 
         #grid elemei gombok-labelek-checkboxok
         #felső sor
-        self.octave_keyboard_offset = tk.IntVar(value=0)
+        self.octave_keyboard_offset = tk.IntVar(master=self.right_1,value=0)
         spinbox = tk.Spinbox(self.right_1,from_=-3,to=3,
                              textvariable=self.octave_keyboard_offset,width=4,font=("Arial", 15))
+        print("IntVar:", self.octave_keyboard_offset.get())
+        print("Spinbox:", spinbox.get())
         spinbox.pack(ipadx=10, ipady=10)
         self.scale_label = tk.Label(self.middle_1,text="",font=("Arial", 25))
         self.scale_label.pack()
@@ -379,10 +381,87 @@ class Piano_Scale_Game:
 
 class Piano_Interval_Game:
 
-    def __init__(self):
-        pass
+    def __init__(self,piano,root,random_interval_count):
+        piano:Piano
+        #EHHEZ A PIANO KEYBOARD-HOZ TARTOZIK A JÁTÉK
+        self.piano_object = piano
+        WIDTH = 1300
+        HEIGHT = 200
+        #játékhoz
+        self.interval_count = random_interval_count
 
-    def generate_random_intervals(self,interval_count):
+
+        #GOMBOK TERÜLETE----------
+        #létrehozás
+        self.button_board = tk.Frame(root,width=WIDTH,height=HEIGHT,bg="white")
+        self.button_board.pack(pady=20,fill="x")
+
+        #grid létrehozása és konfigurálása
+        self.button_board.rowconfigure(0, weight=1) #3 sor
+        self.button_board.rowconfigure(1, weight=1)
+        self.button_board.rowconfigure(2, weight=1)
+        self.button_board.columnconfigure(0, weight=1,minsize=200) # 2 oszlop
+        self.button_board.columnconfigure(1, weight=4)
+        self.button_board.columnconfigure(2, weight=1,minsize=200)
+        self.left_1 = tk.Frame(self.button_board)
+        self.middle_1 = tk.Frame(self.button_board)
+        self.right_1 = tk.Frame(self.button_board)
+        self.left_2 = tk.Frame(self.button_board)
+        self.middle_2 = tk.Frame(self.button_board)
+        self.right_2 = tk.Frame(self.button_board)
+        self.left_3 = tk.Frame(self.button_board)
+        self.middle_3 = tk.Frame(self.button_board)
+        self.right_3 = tk.Frame(self.button_board)
+        self.left_1.grid(row=0, column=0, sticky="nsew")
+        self.middle_1.grid(row=0, column=1, sticky="nsew")
+        self.right_1.grid(row=0,column=2,sticky="nsew")
+        self.left_2.grid(row=1, column=0, sticky="nsew")
+        self.middle_2.grid(row=1, column=1, sticky="nsew")
+        self.right_2.grid(row=1,column=2,sticky="nsew")
+        self.left_3.grid(row=2, column=0, sticky="nsew")
+        self.middle_3.grid(row=2, column=1, sticky="nsew")
+        self.right_3.grid(row=2,column=2,sticky="nsew")
+
+        #grid elemei gombok-labelek-checkboxok
+        #felső sor
+        self.octave_keyboard_offset = tk.IntVar(master=self.right_1,value=0)
+        spinbox = tk.Spinbox(self.right_1,from_=-3,to=3,
+                                textvariable=self.octave_keyboard_offset,width=4,font=("Arial", 15))
+        print("IntVar:", self.octave_keyboard_offset.get())
+        print("Spinbox:", spinbox.get())
+        spinbox.pack(ipadx=10, ipady=10)
+        self.root_note_label = tk.Label(self.middle_1,text="ROOT",font=("Arial", 25))
+        self.root_note_label.pack()
+        #középső sor
+        self.interval_label = tk.Label(self.middle_1,text="TEST1\n\nTEST2\n\nTEST3",font=("Arial", 20))
+        self.interval_label.pack()
+
+        #alsó sor
+        self.reset_button = tk.Button(self.middle_3,text="Reset",command=self.reset_game)
+        self.reset_button.pack()
+        #GOMBOK TERÜLETE##################
+
+        #méretváltozások letiltása -> innentől kezdve nem méretez automatikusan
+        self.left_1.grid_propagate(False)
+        self.middle_1.grid_propagate(False)
+        self.right_1.grid_propagate(False)
+        self.left_2.grid_propagate(False)
+        self.middle_2.grid_propagate(False)
+        self.right_2.grid_propagate(False)
+        self.left_3.grid_propagate(False)
+        self.middle_3.grid_propagate(False)
+        self.right_3.grid_propagate(False)
+
+
+        #RANDOM Interval
+        self.generate_random_intervals()
+        # self.random_scale_name = random_scale_name
+        # self.random_scale_notes = random_scale_notes
+        # self.random_scale_wh_steps = random_scale_wh_steps
+        
+        #self.update_label_texts()!!!!!!!!
+
+    def generate_random_intervals(self):
         interval_dict = {
         1: "minor 2nd",
         2: "Major 2nd",
@@ -412,7 +491,7 @@ class Piano_Interval_Game:
             11: "B"
         }
 
-        random_intervals = sorted(random.sample(range(1, 13), interval_count))
+        random_intervals = sorted(random.sample(range(1, 13), self.interval_count))
         print(random_intervals)
         random_root_note_index = random.randint(0,11)
         random_root_note = NOTE_DICT[random_root_note_index%12]
@@ -424,10 +503,16 @@ class Piano_Interval_Game:
             note = NOTE_DICT[index%12]
             random_interval_notes.append(note)
         random_interval_labels = []
-        #for---> interval label
-
+        for interval in random_intervals:
+            random_interval_labels.append(interval_dict[interval])
         print(f"ROOT: {random_root_note}")
         print(f"Intervals: {random_interval_indexes}")
         print(f"ALL NOTES: {random_interval_notes}")
-        
+        print(f"interval name: {random_interval_labels}")
+
+        self.random_interval_notes=random_interval_notes
+        self.random_interval_labels=random_interval_labels
+
+
+
      

@@ -4,7 +4,7 @@ import threading
 import json
 import os
 
-def scale_game_start(synth_connected):
+def scale_game_start(synth_connected,menu_window):
 
     #json file kezelés----------
     filename = "compledet_scales.json"
@@ -24,13 +24,10 @@ def scale_game_start(synth_connected):
     print(completed_scales)
     # json###################
 
+    game_window = tk.Toplevel(menu_window)
 
-    root = tk.Tk()
-    root.title("Piano scale game")
-    root.geometry("1400x700")
-
-    piano = pmet.Piano(root=root)
-    scale_game = pmet.Piano_Scale_Game(piano=piano,root=root,
+    piano = pmet.Piano(root=game_window)
+    scale_game = pmet.Piano_Scale_Game(piano=piano,root=game_window,
                                        already_completed_scales=completed_scales)
 
 
@@ -54,7 +51,7 @@ def scale_game_start(synth_connected):
                 scale_game.key_pressed(note_ID=note_ID,piano=piano)
 
                 print("Főprogram megkapta:", note_ID)
-            root.after(10, check_midi)
+            game_window.after(10, check_midi)
         #Szintetizator kezelése####################
 
         #MIDI queue figyelésének az elindítása
@@ -72,7 +69,7 @@ def scale_game_start(synth_connected):
         data["completed_scales"] = completed_scales
         with open(filename, "w") as file:
             json.dump(data, file, indent=4)
-        root.destroy()
+        game_window.destroy()
 
-    root.protocol("WM_DELETE_WINDOW", on_closing)
-    root.mainloop()
+    game_window.protocol("WM_DELETE_WINDOW", on_closing)
+  
