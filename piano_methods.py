@@ -430,7 +430,4 @@ class Piano_Interval_Game:
         print(f"Intervals: {random_interval_indexes}")
         print(f"ALL NOTES: {random_interval_notes}")
         
-
-    
-test_object=Piano_Interval_Game()
-test_object.generate_random_intervals(3)        
+     
