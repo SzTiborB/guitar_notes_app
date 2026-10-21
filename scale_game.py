@@ -6,6 +6,7 @@ import os
 
 def scale_game_start(synth_connected,menu_window):
 
+
     #json file kezelés----------
     filename = "compledet_scales.json"
 
@@ -30,6 +31,12 @@ def scale_game_start(synth_connected,menu_window):
     scale_game = pmet.Piano_Scale_Game(piano=piano,root=game_window,
                                        already_completed_scales=completed_scales)
 
+
+    #függvények
+    def keyboard_click(event):
+        note_ID = piano.click_on_keyboard(event=event)
+        print(f"NOTEEEEEE: {note_ID}")
+        scale_game.key_pressed(note_ID=note_ID,piano=piano)
 
 
     if synth_connected == True:
@@ -59,6 +66,7 @@ def scale_game_start(synth_connected,menu_window):
 
     else:
         print("PIANO KLIKKELÉS KELL IDE")
+        piano.keyboard.bind("<Button-1>", keyboard_click)
 
     #BEZÁRÁSKOR MENTSE KI AZ ÖSSZES LEJÁTSZOTT SKÁLÁT
     def on_closing():

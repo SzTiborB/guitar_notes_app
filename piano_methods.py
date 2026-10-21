@@ -122,6 +122,7 @@ class Piano():
         is_sharp =note_ID_dict["is_sharp"]
 
         if is_sharp == False:
+            print(f"OKTAV HELLO: {oktav}")
             note_index = next(key for key, value in self.NOTES_DICT.items() if value == note) #az adott note száma
             center_x=(self.keyboard_white_borders[oktav][note_index]+self.keyboard_white_borders[oktav][note_index+1])/2
             center_y=(self.keyboard_dark_bottom+self.HEIGHT)/2 
@@ -133,6 +134,30 @@ class Piano():
 
     def remove_notes_in_circle(self):
         self.keyboard.delete("clicked_notes")
+
+    def click_on_keyboard(self,event):
+        #OKTAV CHECK 
+        for i in range(len(self.keyboard_ocatve_borders)-1):
+            if event.x > self.keyboard_ocatve_borders[i] and event.x <= self.keyboard_ocatve_borders[i+1]:
+                oktav = i # A MIDI MIATT TOLJUK AZ OKTÁVOT
+
+        #NOTE_ CHECK
+        is_clicked_dark = False
+        if event.y <= self.keyboard_dark_bottom: # HA LEHETSÉGES HOGY FEKETÉT ÜTÜNK
+            for i in range(len(self.keyboard_dark_borders[oktav])):
+                if event.x > self.keyboard_dark_borders[oktav][i][0] and event.x < self.keyboard_dark_borders[oktav][i][1]:
+                    clicked_note =self.NOTES_DICT[i+10] #szimplán csak a notes_dict kódolása miatt
+                    is_clicked_dark = True
+                    note_ID = clicked_note+"_"+str(oktav+3)
+                    
+        #HA NEM FEKETÉT ÜTÖTTÜNK LE
+        if is_clicked_dark == False:
+            for i in range(len(self.keyboard_white_borders[oktav])-1):
+                if event.x > self.keyboard_white_borders[oktav][i] and event.x < self.keyboard_white_borders[oktav][i+1]:
+                    clicked_note = self.NOTES_DICT[i]
+                    note_ID = clicked_note+"_"+str(oktav+3)
+        print(f"KLIKKELT NOTE: {note_ID}")
+        return(note_ID)
 
 
 class Piano_Scale_Game:
@@ -191,8 +216,8 @@ class Piano_Scale_Game:
         self.scale_label.pack()
 
         #középső sor
-        self.show_scale_steps_var = tk.BooleanVar(value=False)
-        scale_step_checkbox = tk.Checkbutton(self.left_2,text="Don't show scale steps",
+        self.show_scale_steps_var = tk.BooleanVar(value=True)
+        scale_step_checkbox = tk.Checkbutton(self.left_2,text="Hide scale steps",
                                     variable=self.show_scale_steps_var,command=self.on_scalestep_checkbox_changed)
         scale_step_checkbox.pack(pady=60)
         self.scale_steps_label = tk.Label(self.middle_2,text="",font=("Arial", 25))
@@ -316,7 +341,7 @@ class Piano_Scale_Game:
 
     def update_label_texts(self):
         self.scale_label.config(text=self.random_scale_name)
-        if self.show_scale_steps_var == False:
+        if self.show_scale_steps_var.get() == False:
             self.scale_steps_label.config(text=self.random_scale_wh_steps)
         self.done_scales_label.config(text=f"Scales done: {self.done_scales}")
         self.already_completed_scales_label.config(
@@ -383,13 +408,15 @@ class Piano_Interval_Game:
 
     def __init__(self,piano,root,random_interval_count):
         piano:Piano
+        
         #EHHEZ A PIANO KEYBOARD-HOZ TARTOZIK A JÁTÉK
         self.piano_object = piano
+        self.set_piano_keyboard_offset(self.piano_object)
         WIDTH = 1300
         HEIGHT = 200
         #játékhoz
         self.interval_count = random_interval_count
-
+        self.guessed_notes = []
 
         #GOMBOK TERÜLETE----------
         #létrehozás
@@ -431,14 +458,16 @@ class Piano_Interval_Game:
         print("Spinbox:", spinbox.get())
         spinbox.pack(ipadx=10, ipady=10)
         self.root_note_label = tk.Label(self.middle_1,text="ROOT",font=("Arial", 25))
-        self.root_note_label.pack()
+        self.root_note_label.pack(pady=20)
         #középső sor
-        self.interval_label = tk.Label(self.middle_1,text="TEST1\n\nTEST2\n\nTEST3",font=("Arial", 20))
-        self.interval_label.pack()
+        self.interval_label_list = []
+        for i in range(self.interval_count):
+            label = tk.Label(self.middle_1,text=f"Hello {i}",font=("Arial", 20))
+            label.pack(pady=10)
+            self.interval_label_list.append(label)
 
         #alsó sor
-        self.reset_button = tk.Button(self.middle_3,text="Reset",command=self.reset_game)
-        self.reset_button.pack()
+
         #GOMBOK TERÜLETE##################
 
         #méretváltozások letiltása -> innentől kezdve nem méretez automatikusan
@@ -459,7 +488,7 @@ class Piano_Interval_Game:
         # self.random_scale_notes = random_scale_notes
         # self.random_scale_wh_steps = random_scale_wh_steps
         
-        #self.update_label_texts()!!!!!!!!
+        self.update_labels()
 
     def generate_random_intervals(self):
         interval_dict = {
@@ -510,9 +539,46 @@ class Piano_Interval_Game:
         print(f"ALL NOTES: {random_interval_notes}")
         print(f"interval name: {random_interval_labels}")
 
+        self.random_root_note = random_root_note
         self.random_interval_notes=random_interval_notes
         self.random_interval_labels=random_interval_labels
 
+    def update_labels(self):
+        self.root_note_label.config(text=self.random_root_note)
+        for i in range(len(self.interval_label_list)):
+            self.interval_label_list[i].config(text=self.random_interval_labels[i])
 
+    def is_note_in_random_intervals(self,note_ID):
+        note_dict = self.parse_noteID(note_ID)
+        note = note_dict["note"]
+
+        if note in self.random_interval_notes:
+            if note not in self.guessed_notes:
+                print("Helyes")
+                self.piano_object.update_keyboard_from_midi(note_ID,color="green")
+                self.guessed_notes.append(note)
+            else:
+                print("Már kitaláltad")
+        else:
+            print("!!!!")
+            self.piano_object.update_keyboard_from_midi(note_ID,color="red")
+
+    def key_pressed(self,note_ID):
+        self.is_note_in_random_intervals(note_ID)
+
+    def set_piano_keyboard_offset(self,piano):
+        piano : Piano
+        piano.octave_keyboard_midi_offset = 3
+        
+
+
+    def parse_noteID(self,note_ID):
+        note,octave = note_ID.split("_")
+        if "#" in note:
+            is_sharp = True
+        else:
+            is_sharp = False
+        octave = int(octave)
+        return  {"note": note, "is_sharp":is_sharp,"octave":octave}
 
      
